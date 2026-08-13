@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Реєстрація — WriteHere</title>
+    <!-- Підключаємо стилі Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex align-items-center" style="min-height: 100vh;">
+
+    <!-- Центруємо форму по центру екрана -->
+    <div class="container" style="max-width: 450px;">
+        
+        <!-- Картка форми -->
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                
+                <div class="text-center mb-4">
+                    <a href="{% url 'home' %}" class="text-decoration-none text-primary fw-bold fs-3">WriteHere</a>
+                    <h4 class="mt-2 fw-bold text-secondary">Створення акаунта</h4>
+                </div>
+                
+                <form method="post">
+                    <!-- Захист від підробки запитів (ОБОВ'ЯЗКОВО для всіх форм у Django) -->
+                    {% csrf_token %}
+                    
+                    <!-- Перебираємо всі поля форми реєстрації (Логін, Пароль, Підтвердження пароля) -->
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">
+                                {{ field.label }}
+                            </label>
+                            
+                            <!-- Поле вводу. Застосовуємо клас form-control для гарного вигляду -->
+                            <input type="{{ field.field.widget.input_type }}" 
+                                   name="{{ field.name }}" 
+                                   class="form-control {% if field.errors %}is-invalid{% endif %}" 
+                                   required>
+                            
+                            <!-- Підказка (наприклад, вимоги до складності пароля) -->
+                            {% if field.help_text %}
+                                <div class="form-text small text-muted">{{ field.help_text }}</div>
+                            {% endif %}
+
+                            <!-- Якщо користувач допустив помилку — виводимо її червоним кольором -->
+                            {% if field.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ field.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    
+                    <button type="submit" class="btn btn-primary w-100 fw-bold mt-3 py-2">
+                        Зареєструватися
+                    </button>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="text-center small">
+                    Вже маєте акаунт? <a href="{% url 'login' %}" class="text-decoration-none fw-bold">Увійти</a>
+                </div>
+
+            </div>
+        </div>
+        
+    </div>
+
+</body>
+</html>

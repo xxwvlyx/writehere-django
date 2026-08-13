@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WriteHere</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <!-- Верхня панель -->
+    <nav class="navbar navbar-dark bg-primary mb-4 shadow-sm">
+        <div class="container d-flex justify-content-between" style="max-width: 600px;">
+            <a class="navbar-brand fw-bold" href="{% url 'home' %}">WriteHere</a>
+            
+            <div>
+                {% if request.user.is_authenticated %}
+                    <!-- Якщо користувач увійшов -->
+                    <span class="navbar-text text-white me-3">
+                        Привіт, <b>{{ request.user.username }}</b>!
+                    </span>
+                    <a href="{% url 'logout' %}" class="btn btn-sm btn-light fw-bold text-primary">Вийти</a>
+                {% else %}
+                    <!-- Якщо користувач гість -->
+                    <a href="{% url 'login' %}" class="btn btn-sm btn-outline-light me-2">Увійти</a>
+                    <a href="{% url 'register' %}" class="btn btn-sm btn-light fw-bold text-primary">Реєстрація</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Головний контейнер (обмежений по ширині, щоб стрічка не розтягувалася на весь екран) -->
+    <div class="container" style="max-width: 600px;">
+        
+        <!-- Блок створення допису (показуємо ТІЛЬКИ авторизованим) -->
+        {% if request.user.is_authenticated %}
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ form.content }}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">Опублікувати</button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <!-- Якщо гість — пропонуємо увійти -->
+            <div class="alert alert-secondary text-center mb-4 shadow-sm border-0">
+                <a href="{% url 'login' %}" class="fw-bold text-decoration-none">Увійдіть</a> або 
+                <a href="{% url 'register' %}" class="fw-bold text-decoration-none">зареєструйтесь</a>, щоб писати дописи!
+            </div>
+        {% endif %}
+
+        <!-- Стрічка дописів -->
+        <h5 class="mb-3 text-secondary">Останні дописи</h5>
+        
+        {% for post in posts %}
+            <div class="card shadow-sm mb-3 border-0">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 fw-bold">
+                         <!-- Генеруємо посилання на 'profile' і передаємо ім'я автора -->
+                        <a href="{% url 'profile' post.author.username %}" class="text-decoration-none">
+                             @{{ post.author.username }}
+                        </a>
+                    </h6>
+                    <p class="card-text fs-5" style="white-space: pre-wrap;">{{ post.content }}</p>
+                    <small class="text-muted">{{ post.created_at|date:"d.m.Y H:i" }}</small>
+                </div>
+            </div>
+        {% empty %}
+            <!-- Повідомлення, якщо дописів немає -->
+            <div class="alert alert-info text-center border-0 shadow-sm">
+                Поки що немає жодного допису. Будьте першим!
+            </div>
+        {% endfor %}
+
+    </div>
+
+</body>
+</html>
