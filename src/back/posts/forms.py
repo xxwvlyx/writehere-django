@@ -11,9 +11,8 @@ class PostForm(forms.ModelForm):
         }
         widgets = {
             'content': forms.Textarea(attrs={
-                'class': 'form-control',
-                'placeholder': 'Напишіть свій допис тут...',
-                'rows': 3,  
-                
-                }),
+                'class': 'form-control border-0 fs-5 shadow-none bg-transparent', 
+                'placeholder': 'Що відбувається?', 
+                'rows': 2
+            })
         }

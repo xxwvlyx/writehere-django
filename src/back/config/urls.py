@@ -17,10 +17,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from posts.views import post_list
+from posts.views import post_list, post_edit, post_delete
 
 urlpatterns = [
     path('admin/', admin.site.urls), #admin page
 
+    path('post/<int:post_id>/edit/', post_edit, name='post_edit'),
+    path('post/<int:post_id>/delete/', post_delete, name='post_delete'),
+
     path('', post_list, name='home'), #main page of the blog
     path('auth/', include('users.urls')), #user authentication urls
+
+    path('accounts/', include('allauth.urls')),
 ]

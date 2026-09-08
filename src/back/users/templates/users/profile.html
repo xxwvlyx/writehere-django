@@ -2,47 +2,195 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Профіль {{ profile_user.username }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профіль {{ profile_user.username }} - WriteHere</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .profile-avatar {
+            width: 130px;
+            height: 130px;
+            border: 4px solid #fff;
+            margin-top: -65px;
+            position: relative;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body class="bg-light" style="font-family: 'Inter', sans-serif;">
 
-    <!-- Навігація -->
-    <nav class="navbar navbar-dark bg-primary mb-4 shadow-sm">
-        <div class="container" style="max-width: 600px;">
-            <a class="navbar-brand fw-bold" href="{% url 'home' %}">WriteHere</a>
-        </div>
-    </nav>
-
-    <div class="container" style="max-width: 600px;">
+<div class="container-xl">
+    <div class="row justify-content-center min-vh-100">
         
-        <!-- Шапка профілю -->
-        <div class="card shadow-sm mb-4 border-0 text-center py-4">
-            <h2 class="fw-bold text-primary">@{{ profile_user.username }}</h2>
-            <p class="text-muted mb-0">На сайті з {{ profile_user.date_joined|date:"d.m.Y" }}</p>
-            <p class="mb-0">Всього дописів: {{ user_posts.count }}</p>
-        </div>
+        <!-- Ліва колонка (Навігація) -->
+        <header class="col-2 col-lg-3 d-flex flex-column sticky-top py-3 px-2 px-lg-4 border-end bg-white" style="height: 100vh;">
+            <a href="{% url 'home' %}" class="d-flex align-items-center gap-3 text-decoration-none mb-3 px-2 px-lg-3 text-dark">
+                <div class="bg-primary text-white rounded d-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px;">
+                    <i class="bi bi-pencil-square"></i>
+                </div>
+                <span class="fs-4 fw-bold d-none d-lg-block tracking-tight">WriteHere</span>
+            </a>
 
-        <h5 class="mb-3 text-secondary">Всі дописи користувача</h5>
-        
-        <!-- Стрічка дописів цього користувача -->
-        {% for post in user_posts %}
-            <div class="card shadow-sm mb-3 border-0">
-                <div class="card-body">
-                    <p class="card-text fs-5" style="white-space: pre-wrap;">{{ post.content }}</p>
-                    <small class="text-muted">{{ post.created_at|date:"d.m.Y H:i" }}</small>
+            <nav class="d-flex flex-column gap-1 mb-4">
+                <a href="{% url 'home' %}" class="d-flex align-items-center gap-3 px-2 px-lg-3 py-2 text-decoration-none text-dark rounded-pill">
+                    <i class="bi bi-house-door fs-4"></i>
+                    <span class="fs-5 d-none d-lg-block">Головна</span>
+                </a>
+                
+                {% if request.user.is_authenticated %}
+                <a href="{% url 'profile' request.user.username %}" class="d-flex align-items-center gap-3 px-2 px-lg-3 py-2 text-decoration-none text-dark fw-bold rounded-pill">
+                    <i class="bi bi-person-fill fs-4"></i>
+                    <span class="fs-5 d-none d-lg-block">Мій Профіль</span>
+                </a>
+                <a href="{% url 'logout' %}" class="d-flex align-items-center gap-3 px-2 px-lg-3 py-2 text-decoration-none text-danger rounded-pill mt-3">
+                    <i class="bi bi-box-arrow-left fs-4"></i>
+                    <span class="fs-5 d-none d-lg-block">Вийти</span>
+                </a>
+                {% else %}
+                <a href="{% url 'login' %}" class="d-flex align-items-center gap-3 px-2 px-lg-3 py-2 text-decoration-none text-primary rounded-pill mt-3">
+                    <i class="bi bi-box-arrow-in-right fs-4"></i>
+                    <span class="fs-5 d-none d-lg-block">Увійти</span>
+                </a>
+                {% endif %}
+            </nav>
+
+            {% if request.user.is_authenticated %}
+            <div class="mt-auto d-flex align-items-center justify-content-center justify-content-lg-between p-2 p-lg-3 rounded-pill text-dark">
+                <div class="d-flex align-items-center gap-2">
+                    <img src="https://ui-avatars.com/api/?name={{ request.user.username }}&background=0d6efd&color=fff" class="rounded-circle object-fit-cover" style="width: 40px; height: 40px;">
+                    <div class="d-none d-lg-flex flex-column" style="line-height: 1.2;">
+                        <span class="fw-bold fs-6">{{ request.user.username }}</span>
+                        <span class="text-secondary small">Авторизовано</span>
+                    </div>
                 </div>
             </div>
-        {% empty %}
-            <div class="alert alert-info text-center border-0 shadow-sm">
-                Цей користувач ще нічого не написав.
-            </div>
-        {% endfor %}
+            {% endif %}
+        </header>
 
-        <!-- Кнопка повернення -->
-        <a href="{% url 'home' %}" class="btn btn-outline-secondary w-100 mt-3 mb-5">Повернутися на головну</a>
+        <!-- Центральна колонка (Профіль та Пости) -->
+        <main class="col-10 col-sm-8 col-md-6 col-lg-5 p-0 border-end bg-white min-vh-100">
+            
+            <!-- Шапка з кнопкою "Назад" -->
+            <div class="sticky-top bg-white bg-opacity-75 border-bottom p-2 d-flex align-items-center gap-3 z-1" style="backdrop-filter: blur(10px);">
+                <a href="javascript:history.back()" class="btn btn-link text-dark text-decoration-none rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <i class="bi bi-arrow-left fs-5"></i>
+                </a>
+                <div class="d-flex flex-column" style="line-height: 1.2;">
+                    <h1 class="h5 fw-bold mb-0">{{ profile_user.username }}</h1>
+                    <span class="text-secondary small">{{ user_posts.count }} публікацій</span>
+                </div>
+            </div>
+
+            <!-- Обкладинка (Статична картинка) -->
+            <div class="w-100 bg-secondary" style="height: 200px; background-image: url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=800&h=200&q=80'); background-size: cover; background-position: center;">
+            </div>
+
+            <!-- Інформація профілю -->
+            <div class="px-3 pb-3 border-bottom">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <!-- Аватарка (Генерується автоматично) -->
+                    <img src="https://ui-avatars.com/api/?name={{ profile_user.username }}&background=random&size=150" alt="Аватар" class="rounded-circle object-fit-cover bg-light profile-avatar shadow-sm">
+                    
+                    <!-- Кнопка редагування (поки веде в нікуди) -->
+                    {% if request.user == profile_user %}
+                    <a href="#" class="btn btn-outline-primary rounded-pill fw-bold mt-3 px-4 shadow-sm">Редагувати профіль</a>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <h2 class="h4 fw-bold mb-0">{{ profile_user.username }}</h2>
+                    <p class="text-secondary mb-2">@{{ profile_user.username }}</p>
+                    
+                    <p class="mb-2">Привіт! Це моя сторінка на WriteHere. (Біографія з'явиться тут пізніше)</p>
+                    
+                    <div class="d-flex align-items-center gap-4 text-secondary small mb-3">
+                        <span class="d-flex align-items-center gap-1"><i class="bi bi-calendar3"></i> Реєстрація: {{ profile_user.date_joined|date:"d.m.Y" }}</span>
+                    </div>
+
+                    <!-- Статистика -->
+                    <div class="d-flex gap-4">
+                        <a href="#" class="text-decoration-none text-dark">
+                            <strong class="fw-bold">{{ user_posts.count }}</strong> <span class="text-secondary">Публікацій</span>
+                        </a>
+                        <a href="#" class="text-decoration-none text-dark">
+                            <strong class="fw-bold">0</strong> <span class="text-secondary">Підписок</span>
+                        </a>
+                        <a href="#" class="text-decoration-none text-dark">
+                            <strong class="fw-bold">0</strong> <span class="text-secondary">Підписників</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вкладки профілю -->
+            <div class="d-flex border-bottom text-center fw-bold">
+                <a href="#" class="flex-fill text-dark text-decoration-none py-3 border-bottom border-primary border-3">Публікації</a>
+            </div>
+
+            <!-- Стрічка автора -->
+            <div class="d-flex flex-column">
+                {% for post in user_posts %}
+                <article class="p-3 border-bottom d-flex gap-3 text-dark">
+                    <div class="flex-shrink-0">
+                        <img src="https://ui-avatars.com/api/?name={{ profile_user.username }}&background=random" class="rounded-circle object-fit-cover" style="width: 40px; height: 40px;">
+                    </div>
+                    
+                    <div class="flex-grow-1" style="min-width: 0;">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <div class="d-flex align-items-center gap-1 text-truncate">
+                                <span class="fw-bold text-dark text-truncate">{{ profile_user.username }}</span>
+                                <span class="text-secondary small">· {{ post.created_at|date:"d.m.Y H:i" }}</span>
+                            </div>
+                            
+                            <!-- Кнопки Редагувати/Видалити -->
+                            {% if request.user == post.author %}
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                    <li><a class="dropdown-item small" href="{% url 'post_edit' post.id %}"><i class="bi bi-pencil me-2"></i>Редагувати</a></li>
+                                    <li><a class="dropdown-item small text-danger" href="{% url 'post_delete' post.id %}"><i class="bi bi-trash me-2"></i>Видалити</a></li>
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <p class="mb-2 text-break fs-5" style="white-space: pre-wrap;">{{ post.content }}</p>
+
+                        <div class="d-flex justify-content-between text-secondary pe-lg-5 mt-2">
+                            <button class="btn btn-link text-secondary text-decoration-none p-0"><i class="bi bi-chat"></i></button>
+                            <button class="btn btn-link text-secondary text-decoration-none p-0"><i class="bi bi-heart"></i></button>
+                        </div>
+                    </div>
+                </article>
+                {% empty %}
+                <div class="p-5 text-center text-secondary">
+                    У цього користувача ще немає публікацій.
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+
+        <!-- Права колонка (Сайдбар) -->
+        <aside class="d-none d-md-block col-md-4 col-lg-4 sticky-top py-2 px-3 px-lg-4 overflow-y-auto" style="height: 100vh;">
+            <div class="bg-white rounded-4 p-3 mb-3 border shadow-sm mt-3">
+                <h2 class="h5 fw-bold mb-3">Про розробника</h2>
+                <div class="text-secondary small mb-2">
+                    Цей проєкт створено на Django. Наступним кроком ми додамо можливість редагувати ці дані!
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2 text-secondary small px-2">
+                <span>© 2024 WriteHere</span>
+            </div>
+        </aside>
 
     </div>
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

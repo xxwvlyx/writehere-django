@@ -1,40 +1,65 @@
 <!DOCTYPE html>
+{% load socialaccount %}
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Вхід — WriteHere</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вхід - WriteHere</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-light d-flex align-items-center" style="min-height: 100vh;">
+<body class="bg-light d-flex align-items-center justify-content-center min-vh-100" style="font-family: 'Inter', sans-serif;">
 
-    <div class="container" style="max-width: 400px;">
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4">
-                <h3 class="mb-4 text-center fw-bold text-primary">Вхід у WriteHere</h3>
-                
-                <form method="post">
-                    {% csrf_token %}
-                    <!-- Виводимо стандартну форму Django -->
-                    {% for field in form %}
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-secondary">{{ field.label }}</label>
-                            <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" class="form-control" required>
-                            {% if field.errors %}
-                                <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                    
-                    <button type="submit" class="btn btn-primary w-100 fw-bold mt-2">Увійти</button>
-                </form>
-                
-                <hr class="my-4">
-                <div class="text-center small">
-                    Немає акаунта? <a href="{% url 'register' %}" class="text-decoration-none fw-bold">Зареєструватися</a>
-                </div>
+<div class="container" style="max-width: 500px;">
+    <!-- Логотип -->
+    <div class="text-center mb-4">
+        <a href="{% url 'home' %}" class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded shadow-sm" style="width: 50px; height: 50px; text-decoration: none;">
+            <i class="bi bi-pencil-square fs-3"></i>
+        </a>
+        <h2 class="fw-bold mt-3">З поверненням!</h2>
+        <p class="text-secondary">Увійдіть, щоб продовжити спілкування.</p>
+    </div>
+
+    <form action="{% provider_login_url 'google' %}" method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-dark w-100 rounded-pill fw-bold py-2 mb-3 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-google"></i>
+        Увійти через Google
+    </button>
+    </form>
+        
+        <div class="d-flex align-items-center my-3">
+            <hr class="flex-grow-1">
+            <span class="mx-3 text-secondary small">АБО</span>
+            <hr class="flex-grow-1">
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="alert alert-danger p-2 small border-0">
+                Неправильний логін або пароль. Спробуйте ще раз.
             </div>
+            {% endif %}
+
+            {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">{{ field.label }}</label>
+                    {{ field }}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold mt-3">Увійти</button>
+        </form>
+
+        <div class="text-center mt-4">
+            <span class="text-secondary small">Ще не з нами?</span>
+            <a href="{% url 'register' %}" class="text-primary text-decoration-none fw-bold small">Зареєструватися</a>
         </div>
     </div>
+</div>
 
 </body>
 </html>

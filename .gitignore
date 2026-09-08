@@ -11,3 +11,4 @@ __pycache__/
 
 # Налаштування VS Code (опціонально)
 .vscode/
+.env
