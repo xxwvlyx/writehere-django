@@ -1,9 +1,16 @@
 # Віртуальне середовище
+.venv/
 venv/
 env/
+src/venv/
 
 # База даних
+*.sqlite3
 db.sqlite3
+
+# Медіа файли
+media/
+
 
 # Кеш Python
 __pycache__/

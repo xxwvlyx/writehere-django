@@ -2,21 +2,45 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Редагувати допис</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редагувати допис - WriteHere</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body class="bg-light pt-5">
     <div class="container" style="max-width: 600px;">
-        <h3 class="mb-4">Редагування допису</h3>
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
-                <form method="post">
+        <h3 class="mb-4 fw-bold">Редагування допису</h3>
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body p-4">
+                <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
+                    {% if form.errors %}
+                    <div class="alert alert-danger p-2 small border-0">
+                        {{ form.non_field_errors.0|default:"Будь ласка, виправте помилки." }}
+                    </div>
+                    {% endif %}
+
                     <div class="mb-3">
+                        <label class="form-label small text-secondary">Текст допису</label>
                         {{ form.content }}
                     </div>
-                    <button type="submit" class="btn btn-success fw-bold">Зберегти зміни</button>
-                    <a href="{% url 'home' %}" class="btn btn-outline-secondary ms-2">Скасувати</a>
+
+                    {% if post.image %}
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Поточне зображення</label>
+                        <img src="{{ post.image.url }}" class="img-fluid rounded-3 d-block border mb-2" style="max-height: 250px;">
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <label class="form-label small text-secondary">Змінити зображення</label>
+                        {{ form.image }}
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'post_detail' post.id %}" class="btn btn-outline-secondary rounded-pill px-4">Скасувати</a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Зберегти зміни</button>
+                    </div>
                 </form>
             </div>
         </div>

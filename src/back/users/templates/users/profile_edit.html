@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редагувати профіль - WriteHere</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-light py-5" style="font-family: 'Inter', sans-serif;">
+
+<div class="container" style="max-width: 650px;">
+    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+            <h2 class="h4 fw-bold mb-0">Редагування профілю</h2>
+            <a href="{% url 'profile' request.user.username %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-x-lg me-1"></i>Скасувати
+            </a>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% if form.errors %}
+            <div class="alert alert-danger p-2 small border-0">
+                Будь ласка, виправте помилки нижче.
+            </div>
+            {% endif %}
+
+            <div class="row g-3 mb-3">
+                <div class="col-sm-6">
+                    <label class="form-label small fw-bold">Ім'я</label>
+                    {{ form.first_name }}
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label small fw-bold">Прізвище</label>
+                    {{ form.last_name }}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Аватар (зображення профілю)</label>
+                <div class="d-flex align-items-center gap-3">
+                    <img src="{{ profile.avatar_url }}" class="rounded-circle object-fit-cover border" style="width: 55px; height: 55px;">
+                    <div class="flex-grow-1">
+                        {{ form.avatar }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Обкладинка (банер профілю)</label>
+                {{ form.cover_image }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Про себе (Bio)</label>
+                {{ form.bio }}
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6">
+                    <label class="form-label small fw-bold">Місцезнаходження</label>
+                    {{ form.location }}
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label small fw-bold">Веб-сайт</label>
+                    {{ form.website }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label small fw-bold">Дата народження</label>
+                    {{ form.birth_date }}
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                <a href="{% url 'profile' request.user.username %}" class="btn btn-light rounded-pill px-4">Скасувати</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Зберегти зміни</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
+

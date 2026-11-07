@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load post_extras %}
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
@@ -41,8 +42,8 @@
                 </a>
                 
                 {% if request.user.is_authenticated %}
-                <a href="{% url 'profile' request.user.username %}" class="d-flex align-items-center gap-3 px-2 px-lg-3 py-2 text-decoration-none text-dark fw-bold rounded-pill">
-                    <i class="bi bi-person-fill fs-4"></i>
+                <a href="{% url 'profile' request.user.username %}" class="d-flex align-items-center gap-3 px-2 px-lg-3 py-2 text-decoration-none text-dark {% if request.user == profile_user %}fw-bold{% endif %} rounded-pill">
+                    <i class="bi {% if request.user == profile_user %}bi-person-fill{% else %}bi-person{% endif %} fs-4"></i>
                     <span class="fs-5 d-none d-lg-block">Мій Профіль</span>
                 </a>
                 <a href="{% url 'logout' %}" class="d-flex align-items-center gap-3 px-2 px-lg-3 py-2 text-decoration-none text-danger rounded-pill mt-3">
@@ -60,7 +61,7 @@
             {% if request.user.is_authenticated %}
             <div class="mt-auto d-flex align-items-center justify-content-center justify-content-lg-between p-2 p-lg-3 rounded-pill text-dark">
                 <div class="d-flex align-items-center gap-2">
-                    <img src="https://ui-avatars.com/api/?name={{ request.user.username }}&background=0d6efd&color=fff" class="rounded-circle object-fit-cover" style="width: 40px; height: 40px;">
+                    <img src="{{ request.user.profile.avatar_url }}" class="rounded-circle object-fit-cover" style="width: 40px; height: 40px;">
                     <div class="d-none d-lg-flex flex-column" style="line-height: 1.2;">
                         <span class="fw-bold fs-6">{{ request.user.username }}</span>
                         <span class="text-secondary small">Авторизовано</span>
@@ -79,48 +80,68 @@
                     <i class="bi bi-arrow-left fs-5"></i>
                 </a>
                 <div class="d-flex flex-column" style="line-height: 1.2;">
-                    <h1 class="h5 fw-bold mb-0">{{ profile_user.username }}</h1>
+                    <h1 class="h5 fw-bold mb-0">{% if profile_user.first_name %}{{ profile_user.first_name }} {{ profile_user.last_name }}{% else %}{{ profile_user.username }}{% endif %}</h1>
                     <span class="text-secondary small">{{ user_posts.count }} публікацій</span>
                 </div>
             </div>
 
-            <!-- Обкладинка (Статична картинка) -->
-            <div class="w-100 bg-secondary" style="height: 200px; background-image: url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=800&h=200&q=80'); background-size: cover; background-position: center;">
+            <!-- Обкладинка -->
+            <div class="w-100 bg-secondary" style="height: 200px; background-image: url('{{ profile.cover_url }}'); background-size: cover; background-position: center;">
             </div>
 
             <!-- Інформація профілю -->
             <div class="px-3 pb-3 border-bottom">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                    <!-- Аватарка (Генерується автоматично) -->
-                    <img src="https://ui-avatars.com/api/?name={{ profile_user.username }}&background=random&size=150" alt="Аватар" class="rounded-circle object-fit-cover bg-light profile-avatar shadow-sm">
+                    <!-- Аватарка -->
+                    <img src="{{ profile.avatar_url }}" alt="Аватар" class="rounded-circle object-fit-cover bg-light profile-avatar shadow-sm">
                     
-                    <!-- Кнопка редагування (поки веде в нікуди) -->
+                    <!-- Кнопки: Редагувати або Підписатися -->
                     {% if request.user == profile_user %}
-                    <a href="#" class="btn btn-outline-primary rounded-pill fw-bold mt-3 px-4 shadow-sm">Редагувати профіль</a>
+                    <a href="{% url 'profile_edit' %}" class="btn btn-outline-primary rounded-pill fw-bold mt-3 px-4 shadow-sm">Редагувати профіль</a>
+                    {% elif request.user.is_authenticated %}
+                    <form action="{% url 'follow_toggle' profile_user.username %}" method="POST" class="mt-3">
+                        {% csrf_token %}
+                        {% if is_following %}
+                        <button type="submit" class="btn btn-outline-danger rounded-pill fw-bold px-4 shadow-sm">Відписатися</button>
+                        {% else %}
+                        <button type="submit" class="btn btn-dark rounded-pill fw-bold px-4 shadow-sm">Підписатися</button>
+                        {% endif %}
+                    </form>
                     {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    <h2 class="h4 fw-bold mb-0">{{ profile_user.username }}</h2>
+                    <h2 class="h4 fw-bold mb-0">{% if profile_user.first_name %}{{ profile_user.first_name }} {{ profile_user.last_name }}{% else %}{{ profile_user.username }}{% endif %}</h2>
                     <p class="text-secondary mb-2">@{{ profile_user.username }}</p>
                     
-                    <p class="mb-2">Привіт! Це моя сторінка на WriteHere. (Біографія з'явиться тут пізніше)</p>
+                    {% if profile.bio %}
+                    <p class="mb-2 text-break">{{ profile.bio }}</p>
+                    {% endif %}
                     
-                    <div class="d-flex align-items-center gap-4 text-secondary small mb-3">
+                    <div class="d-flex flex-wrap align-items-center gap-3 text-secondary small mb-3">
+                        {% if profile.location %}
+                        <span class="d-flex align-items-center gap-1"><i class="bi bi-geo-alt"></i> {{ profile.location }}</span>
+                        {% endif %}
+                        {% if profile.website %}
+                        <span class="d-flex align-items-center gap-1">
+                            <i class="bi bi-link-45deg"></i>
+                            <a href="{{ profile.website }}" target="_blank" rel="noopener" class="text-decoration-none text-primary">{{ profile.website }}</a>
+                        </span>
+                        {% endif %}
                         <span class="d-flex align-items-center gap-1"><i class="bi bi-calendar3"></i> Реєстрація: {{ profile_user.date_joined|date:"d.m.Y" }}</span>
                     </div>
 
                     <!-- Статистика -->
                     <div class="d-flex gap-4">
-                        <a href="#" class="text-decoration-none text-dark">
+                        <span class="text-dark">
                             <strong class="fw-bold">{{ user_posts.count }}</strong> <span class="text-secondary">Публікацій</span>
-                        </a>
-                        <a href="#" class="text-decoration-none text-dark">
-                            <strong class="fw-bold">0</strong> <span class="text-secondary">Підписок</span>
-                        </a>
-                        <a href="#" class="text-decoration-none text-dark">
-                            <strong class="fw-bold">0</strong> <span class="text-secondary">Підписників</span>
-                        </a>
+                        </span>
+                        <span class="text-dark">
+                            <strong class="fw-bold">{{ following_count }}</strong> <span class="text-secondary">Підписок</span>
+                        </span>
+                        <span class="text-dark">
+                            <strong class="fw-bold">{{ followers_count }}</strong> <span class="text-secondary">Підписників</span>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -135,17 +156,16 @@
                 {% for post in user_posts %}
                 <article class="p-3 border-bottom d-flex gap-3 text-dark">
                     <div class="flex-shrink-0">
-                        <img src="https://ui-avatars.com/api/?name={{ profile_user.username }}&background=random" class="rounded-circle object-fit-cover" style="width: 40px; height: 40px;">
+                        <img src="{{ profile.avatar_url }}" class="rounded-circle object-fit-cover" style="width: 40px; height: 40px;">
                     </div>
                     
                     <div class="flex-grow-1" style="min-width: 0;">
                         <div class="d-flex justify-content-between align-items-start mb-1">
                             <div class="d-flex align-items-center gap-1 text-truncate">
-                                <span class="fw-bold text-dark text-truncate">{{ profile_user.username }}</span>
+                                <span class="fw-bold text-dark">{{ profile_user.username }}</span>
                                 <span class="text-secondary small">· {{ post.created_at|date:"d.m.Y H:i" }}</span>
                             </div>
                             
-                            <!-- Кнопки Редагувати/Видалити -->
                             {% if request.user == post.author %}
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown">
@@ -159,11 +179,36 @@
                             {% endif %}
                         </div>
                         
+                        {% if post.content %}
                         <p class="mb-2 text-break fs-5" style="white-space: pre-wrap;">{{ post.content }}</p>
+                        {% endif %}
+
+                        {% if post.image %}
+                        <div class="mb-2">
+                            <a href="{% url 'post_detail' post.id %}">
+                                <img src="{{ post.image.url }}" alt="Допис" class="img-fluid rounded-3 border" style="max-height: 400px; width: 100%; object-fit: cover;">
+                            </a>
+                        </div>
+                        {% endif %}
 
                         <div class="d-flex justify-content-between text-secondary pe-lg-5 mt-2">
-                            <button class="btn btn-link text-secondary text-decoration-none p-0"><i class="bi bi-chat"></i></button>
-                            <button class="btn btn-link text-secondary text-decoration-none p-0"><i class="bi bi-heart"></i></button>
+                            <a href="{% url 'post_detail' post.id %}" class="text-secondary text-decoration-none d-flex align-items-center gap-2">
+                                <i class="bi bi-chat"></i>
+                                <span class="small">{{ post.comments_count }}</span>
+                            </a>
+                            <form action="{% url 'post_like' post.id %}" method="POST" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link p-0 text-decoration-none d-flex align-items-center gap-1">
+                                    <i class="bi {% if post|is_liked_by:request.user %}bi-heart-fill text-danger{% else %}bi-heart text-secondary{% endif %}"></i>
+                                    <span class="small text-secondary">{{ post.likes_count }}</span>
+                                </button>
+                            </form>
+                            <form action="{% url 'post_bookmark' post.id %}" method="POST" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link p-0 text-decoration-none text-secondary">
+                                    <i class="bi {% if post|is_bookmarked_by:request.user %}bi-bookmark-fill text-primary{% else %}bi-bookmark{% endif %}"></i>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </article>
@@ -175,16 +220,17 @@
             </div>
         </main>
 
-        <!-- Права колонка (Сайдбар) -->
+        <!-- Права колонка -->
         <aside class="d-none d-md-block col-md-4 col-lg-4 sticky-top py-2 px-3 px-lg-4 overflow-y-auto" style="height: 100vh;">
-            <div class="bg-white rounded-4 p-3 mb-3 border shadow-sm mt-3">
-                <h2 class="h5 fw-bold mb-3">Про розробника</h2>
-                <div class="text-secondary small mb-2">
-                    Цей проєкт створено на Django. Наступним кроком ми додамо можливість редагувати ці дані!
+            <div class="bg-white rounded-4 p-3 mb-3 border mt-3 shadow-sm">
+                <h2 class="h5 fw-bold mb-3">Що обговорюють</h2>
+                <div class="d-flex flex-column gap-2 text-secondary small">
+                    <span class="badge bg-light text-dark text-start py-2">#Django</span>
+                    <span class="badge bg-light text-dark text-start py-2">#Python</span>
                 </div>
             </div>
             <div class="d-flex flex-wrap gap-2 text-secondary small px-2">
-                <span>© 2024 WriteHere</span>
+                <span>© 2026 WriteHere</span>
             </div>
         </aside>
 

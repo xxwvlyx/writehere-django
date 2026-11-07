@@ -1,67 +1,132 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import Post #our model Post
-from .forms import PostForm 
-
-# Create your views here.
+from django.http import JsonResponse
+from .models import Post, Like, Comment, Bookmark
+from .forms import PostForm, CommentForm
 
 def post_list(request):
-
+    feed = request.GET.get('feed', 'all')
+    
     if request.method == 'POST':
-        form = PostForm(request.POST)
+        if not request.user.is_authenticated:
+            return redirect('login')
+        form = PostForm(request.POST, request.FILES)
         if form.is_valid():
-            new_post = form.save(commit=False)  # Create a new Post object but don't save to the database yet
-            new_post.author = request.user  # Set the author to the currently logged-in user
-            new_post.save()  # Save the new Post object to the database
-
-        return redirect('home')  # Redirect to the home page after saving the post
-    
+            new_post = form.save(commit=False)
+            new_post.author = request.user
+            new_post.save()
+            return redirect('home')
     else:
-        form = PostForm()  # Create an empty f  orm for GET requests
+        form = PostForm()
     
-    posts = Post.objects.all()
+    posts_qs = Post.objects.select_related('author', 'author__profile').prefetch_related('likes', 'comments')
+    
+    if feed == 'following' and request.user.is_authenticated:
+        following_ids = request.user.following_relations.values_list('following_id', flat=True)
+        posts = posts_qs.filter(author_id__in=following_ids)
+    else:
+        feed = 'all'
+        posts = posts_qs.all()
+
     context = {
         'posts': posts,
         'form': form,
+        'feed': feed,
     }
-
     return render(request, 'posts/post_list.html', context)
+
+def post_detail(request, post_id):
+    post = get_object_or_404(
+        Post.objects.select_related('author', 'author__profile').prefetch_related('likes', 'comments'),
+        id=post_id
+    )
+    comments = post.comments.select_related('author', 'author__profile').all()
+
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return redirect('login')
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            new_comment = comment_form.save(commit=False)
+            new_comment.author = request.user
+            new_comment.post = post
+            new_comment.save()
+            return redirect('post_detail', post_id=post.id)
+    else:
+        comment_form = CommentForm()
+
+    context = {
+        'post': post,
+        'comments': comments,
+        'comment_form': comment_form,
+    }
+    return render(request, 'posts/post_detail.html', context)
+
+@login_required
+def post_like(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    like = Like.objects.filter(user=request.user, post=post).first()
+    
+    if like:
+        like.delete()
+        liked = False
+    else:
+        Like.objects.create(user=request.user, post=post)
+        liked = True
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'liked': liked,
+            'likes_count': post.likes_count,
+        })
+    
+    next_url = request.META.get('HTTP_REFERER') or '/'
+    return redirect(next_url)
+
+@login_required
+def post_bookmark(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    bookmark = Bookmark.objects.filter(user=request.user, post=post).first()
+
+    if bookmark:
+        bookmark.delete()
+        bookmarked = False
+    else:
+        Bookmark.objects.create(user=request.user, post=post)
+        bookmarked = True
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'bookmarked': bookmarked,
+        })
+
+    next_url = request.META.get('HTTP_REFERER') or '/'
+    return redirect(next_url)
 
 @login_required
 def post_edit(request, post_id):
-    """Редагування допису"""
-    # Знаходимо пост за ID
     post = get_object_or_404(Post, id=post_id)
-    
-    # ПЕРЕВІРКА БЕЗПЕКИ: чи є поточний користувач автором посту?
     if request.user != post.author:
-        return redirect('home') # Якщо ні - просто викидаємо його на головну
-        
+        return redirect('home')
+
     if request.method == 'POST':
-        # Передаємо в форму дані з POST-запиту, АЛЕ вказуємо instance=post, 
-        # щоб Django зрозумів, що це оновлення старого, а не створення нового!
-        form = PostForm(request.POST, instance=post)
+        form = PostForm(request.POST, request.FILES, instance=post)
         if form.is_valid():
             form.save()
-            return redirect('home')
+            return redirect('post_detail', post_id=post.id)
     else:
-        # Якщо це GET-запит (просто зайшли на сторінку), заповнюємо форму старим текстом
         form = PostForm(instance=post)
-        
+
     return render(request, 'posts/post_edit.html', {'form': form, 'post': post})
 
 @login_required
 def post_delete(request, post_id):
-    """Видалення допису"""
     post = get_object_or_404(Post, id=post_id)
-    
-    # ПЕРЕВІРКА БЕЗПЕКИ: видаляти може тільки автор
     if request.user != post.author:
         return redirect('home')
-        
+
     if request.method == 'POST':
-        # Якщо користувач підтвердив видалення (натиснув кнопку у формі)
         post.delete()
         return redirect('home')
-        
+
     return render(request, 'posts/post_delete.html', {'post': post})
